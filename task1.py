@@ -51,7 +51,7 @@ def edmonds_karp(capacity_matrix, source, sink):
         # Збільшуємо максимальний потік
         max_flow += path_flow
 
-    return max_flow
+    return max_flow, flow_matrix
 
 def main():
     # Створюємо граф
@@ -112,8 +112,9 @@ def main():
     unique_nodes.add("Super Source")
     unique_nodes.add("Super Sink")
     
-    # Створюємо мапінг: Рядок -> Число-індекс
+    # Створюємо мапінг в обидва боки
     node_to_idx = {name: idx for idx, name in enumerate(sorted(unique_nodes))}
+    idx_to_node = {idx: name for name, idx in node_to_idx.items()}
     num_nodes = len(node_to_idx)
 
     # Ініціалізуємо порожню матрицю суміжності (заповнену нулями)
@@ -137,10 +138,30 @@ def main():
     sink_idx = node_to_idx["Super Sink"]
 
     # Виклик функції Едмондса-Карпа
-    max_flow_value = edmonds_karp(capacity_matrix, source_idx, sink_idx)
+    max_flow_value, flow_matrix = edmonds_karp(capacity_matrix, source_idx, sink_idx)
 
     print(f"Maximal flow in the network: {max_flow_value}")
     
+    # Виведення таблиці розподілу потоків
+    print(f"\n| {'Terminal':<10} | {'Shop':<10} | {'Actual flow (units) |':<19}")
+    print("-" * 50)
+    
+    for i in range(num_nodes):
+        for j in range(num_nodes):
+            flow = flow_matrix[i][j]
+            # Виводимо тільки реальні додатні потоки, ігноруючи віртуальні супервузли
+            if flow > 0 and "Super" not in idx_to_node[i] and "Super" not in idx_to_node[j]:
+                node_a = idx_to_node[i]
+                node_b = idx_to_node[j]
+                print(f"| {node_a:<10} | {node_b:<10} | {flow:<19} |")
+
+    # Висновок
+    print('1. Які термінали забезпечують найбільший потік товарів до магазинів? - Terminal 1 60 одиниць.')
+    print('2. Які маршрути мають найменшу пропускну здатність і як це впливає на загальний потік? - На рівні терміналів Terminal 2 -> Store 2 10 одиниць покриває лише 1 з 3 магазинів.')
+    print('3. Які магазини отримали найменше товарів і чи можна збільшити їх постачання, збільшивши пропускну здатність певних маршрутів? Магазини 3,9,12,13,14 не увійшли до таблиці тобто не отриали нічого. Потрбно збільшити можливості відповідних їм складів.')
+    print('4. Чи є вузькі місця, які можна усунути для покращення ефективності логістичної мережі? - Їх повно адже низка магазинів взагалі лишилися поза таблицею.')
+
 
 if __name__ == "__main__":
     main()
+
